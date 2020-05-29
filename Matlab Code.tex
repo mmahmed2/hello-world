@@ -1,0 +1,429 @@
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and export to LaTeX again.
+
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{epstopdf}
+\usepackage[table]{xcolor}
+\usepackage{matlab}
+
+\sloppy
+\epstopdfsetup{outdir=./}
+\graphicspath{ {./EEE579_images/} }
+
+\begin{document}
+
+\matlabheading{Loading and creating the data for analysis}
+
+\begin{par}
+\begin{flushleft}
+We first need to load the data, then check if all the data variables have proper short names and have a proper categoriy assigned to each of them. Also, we need to check if we have any null values in the data.
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+varNames = {'con','temp','hod','dow','dom','moy'};
+maint = table(energyconsumptionlevels.consumption,energyconsumptionlevels.temperature,energyconsumptionlevels.hour_of_day,energyconsumptionlevels.day_of_week,energyconsumptionlevels.day_of_month,energyconsumptionlevels.month_of_year,'VariableNames',varNames);
+
+hod = categorical(maint.hod);
+dow = categorical(maint.dow);
+dom = categorical(maint.dom);
+moy = categorical(maint.moy);
+
+maint1 = table(maint.con,maint.temp,hod,dow,dom,moy,'VariableNames',varNames);
+ 
+maint2 = maint1(~any(ismissing(maint1),2),:);
+
+clear moy dom varNames maint1 hod maint dow 
+\end{matlabcode}
+
+\vspace{1em}
+
+\matlabheading{Visualizing the data}
+
+\begin{par}
+\begin{flushleft}
+Visualizing the data is crucial in order to understand the type of problems we will face during creating the desired model. Varius types of plot cant tell how are the variables relate to each other. 
+\end{flushleft}
+\end{par}
+
+\matlabheadingthree{Scatter Plot }
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+scatter(maint2.temp,maint2.con,"filled")
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_0.eps}
+\end{center}
+\begin{matlabcode}
+qqplot(maint2.temp)
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_1.eps}
+\end{center}
+\begin{matlabcode}
+qqplot(maint2.con)
+
+title('Consumption Vs Tempareture')
+xlabel('Tempareture(C)')
+ylabel('Consumption(MW)')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_2.eps}
+\end{center}
+\begin{matlabcode}
+figure
+
+\end{matlabcode}
+
+\matlabheadingthree{Boxplot}
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+
+boxplot(maint2.con,maint2.hod);
+title('Consumption Vs Hour of Day')
+xlabel('Hour of Day')
+ylabel('Consumption(MW)')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_3.eps}
+\end{center}
+\begin{matlabcode}
+
+boxplot(maint2.con,maint2.dow);
+title('Consumption Vs Day of Week')
+xlabel('Day of Week')
+ylabel('Consumption(MW)')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_4.eps}
+\end{center}
+\begin{matlabcode}
+
+boxplot(maint2.con,maint2.dom);
+title('Consumption Vs Day of month')
+xlabel('Day of Month')
+ylabel('Consumption(MW)')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_5.eps}
+\end{center}
+\begin{matlabcode}
+
+boxplot(maint2.con,maint2.moy);
+title('Consumption Vs Month of Year')
+xlabel('Month of Year')
+ylabel('Consumption(MW)')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_6.eps}
+\end{center}
+
+\begin{par}
+\begin{flushleft}
+We can notice from the above boxplots for the consumptions against the different time units that day of the week and day of the month do not show clear difference in their categories. It is anticipated that we would need to remove these variables from our model since they do not contribute much in predicting the consumption as they do not have a clear variance among their individual categories. The decision of removing these variables will be validated in the ANOVA stage. 
+\end{flushleft}
+\end{par}
+
+
+\vspace{1em}
+\matlabheadingthree{Histogram }
+
+\begin{par}
+\hfill \break
+\end{par}
+
+\begin{matlabcode}
+histfit(maint2.con)
+title('Consumption Histogram')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_7.eps}
+\end{center}
+\begin{matlabcode}
+figure
+histfit(maint2.temp)
+title('Tempreture Histogram')
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_8.eps}
+\end{center}
+
+\begin{par}
+\begin{flushleft}
+From the above figures we can notice that consumtion does not approach a normal distribution unlike tempreture. This will pose a problem while modeling the regression model.
+\end{flushleft}
+\end{par}
+
+
+\vspace{1em}
+\matlabheadingthree{QQplot }
+
+\begin{par}
+\begin{flushleft}
+QQplot can give us a clear visualization of how strong the data represents a normal distribution. 
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+figure;
+tiledlayout(1,2);
+nexttile;
+qqplot(maint2.con);
+title("Consumption");
+nexttile;
+qqplot(maint2.temp);
+title("Tempreture");
+\end{matlabcode}
+\begin{center}
+\includegraphics[width=\maxwidth{56.196688409433015em}]{figure_9.png}
+\end{center}
+
+\matlabheading{Preparing test data points}
+
+\begin{par}
+\begin{flushleft}
+Test data points are randomly selected data extracted from our data table in order to use it after creating the regression model to test our model accuracy. These test data points will not be included in our regression model creation process. 
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+M = [1,200,400,600,800,1000,1200,1300,1400,1600,1800,2000,2200,2300,2400,2600,2800,3000,3200,3300,3400,3600,3800,4000,4200,4400,4600,4800,4900,5000,5200,5400,5600,5800,5900,6000,6200,6400,6600,6800,7000,7200,7400,7600,7800,8000,8200,8400,8600,8700];
+T = maint2(M,:);
+maint2(M,:) =[];
+clear M;
+
+\end{matlabcode}
+
+
+\vspace{1em}
+\matlabheading{Correlation Check}
+
+\begin{par}
+\begin{flushleft}
+Correlation is an important step in modeling our regression. IT can tell us about the relationship between independent variable. Correlation will harm the model as the independet variable seem to have a relationship between themselves. Thus, the model outcome will be heavily influenced by these relationships.
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+corrcoef(maint2.con,maint2.temp)
+\end{matlabcode}
+\begin{matlaboutput}
+ans = 2x2    
+   1.000000000000000   0.434295398771983
+   0.434295398771983   1.000000000000000
+
+\end{matlaboutput}
+
+\begin{par}
+\begin{flushleft}
+This leads us to say that there is no obvious relationship between the tempreture value and that load on the particular hour. 0.4343 means that the relationship between both variables do not show strong linear relationship. It is possible that we going to drop this set of values from the model because hours of the day itself can give enough indication of the tempreture.
+\end{flushleft}
+\end{par}
+
+
+\vspace{1em}
+\matlabheading{Creating the Model }
+
+\begin{par}
+\begin{flushleft}
+Since there is no strong linearity between tempreture and consumption, we decided to drop tempreture. This leaves the other predictors to be all categorical. These predictors are hour of the day, day of the week, day of the month, month of the year
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+varNames = {'con','hod','dow','dom','moy'}; 
+TT = table(maint2.con,maint2.hod,maint2.dow,maint2.dom,maint2.moy,'VariableNames', varNames);
+\end{matlabcode}
+
+
+\vspace{1em}
+\begin{par}
+\begin{flushleft}
+Now, the model will be created using regression decision trees
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+mdl = fitrtree(TT,"con")
+\end{matlabcode}
+\begin{matlaboutput}
+mdl = 
+  RegressionTree
+           PredictorNames: {'hod'  'dow'  'dom'  'moy'}
+             ResponseName: 'con'
+    CategoricalPredictors: [1 2 3 4]
+        ResponseTransform: 'none'
+          NumObservations: 8734
+
+
+  Properties, Methods
+
+\end{matlaboutput}
+
+\begin{par}
+\begin{flushleft}
+Now we will drop day of month to check its effect on the model
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+varNames = {'con','hod','dow','moy'}; 
+TT_dom = table(maint2.con,maint2.hod,maint2.dow,maint2.moy,'VariableNames', varNames);
+
+mdl_dom = fitrtree(TT_dom,'con')
+\end{matlabcode}
+\begin{matlaboutput}
+mdl_dom = 
+  RegressionTree
+           PredictorNames: {'hod'  'dow'  'moy'}
+             ResponseName: 'con'
+    CategoricalPredictors: [1 2 3]
+        ResponseTransform: 'none'
+          NumObservations: 8734
+
+
+  Properties, Methods
+
+\end{matlaboutput}
+\begin{matlabcode}
+
+\end{matlabcode}
+
+\begin{par}
+\begin{flushleft}
+Next, we will create the model using the all predictors except day of week.
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+varNames = {'con','hod','dom','moy'}; 
+TT_dow = table(maint2.con,maint2.hod,maint2.dom,maint2.moy,'VariableNames', varNames);
+mdl_dow = fitrtree(TT_dow,'con');
+
+\end{matlabcode}
+
+\begin{par}
+\begin{flushleft}
+Finally, create the model with only hours of the day and day of the month predictors. 
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+varNames = {'con','hod','moy'}; 
+TT_dow_dom= table(maint2.con,maint2.hod,maint2.moy,'VariableNames', varNames);
+mdl_dom_dow = fitrtree(TT_dow_dom,'con');
+
+clear TT TT_dom TT_dow TT_dow_dom varNames ans
+\end{matlabcode}
+
+\matlabheading{ Making Predictions}
+
+\begin{par}
+\begin{flushleft}
+Next step is to use the test data aquaired before the analysis and use it for creating predictions. The obtained predictions will be plotted agains the actual values and also used to calculate the accuracy percentage for each model.
+\end{flushleft}
+\end{par}
+
+\begin{matlabcode}
+prediction = predict(mdl,mdl_T);
+\end{matlabcode}
+\begin{matlaboutput}
+Unrecognized function or variable 'mdl_T'.
+\end{matlaboutput}
+\begin{matlabcode}
+format long
+ 
+ 
+XX = abs(prediction-con);
+format long
+err = XX(:,1)/con(:,1);
+C = err(:,31);
+
+CC = sum(C);
+CC;
+ErrorR = (1 - (CC/sum(con)))*100;
+ErrorR
+figure
+scatter(prediction,con,'filled');
+title("Prection Vs Actual Consumption Values")
+xlabel('Predicted Values(MW)')
+ylabel('Actual Values(MW)')
+
+prediction = predict(mdl_dom,mdl_dom_T);
+ 
+XX = abs(prediction-con);
+format long
+err = XX(:,1)/con(:,1);
+C = err(:,31);
+
+CC = sum(C);
+CC;
+ErrorR = (1 - (CC/sum(con)))*100;
+ErrorR
+figure
+scatter(prediction,con,'filled');
+title("Prection Vs Actual Consumption Values")
+xlabel('Predicted Values(MW)')
+ylabel('Actual Values(MW)')
+
+prediction = predict(mdl_dom_dow,mdl_dom_dow_T);
+ 
+XX = abs(prediction-con);
+format long
+err = XX(:,1)/con(:,1);
+C = err(:,31);
+
+CC = sum(C);
+CC;
+ErrorR = (1 - (CC/sum(con)))*100;
+ErrorR
+figure
+scatter(prediction,con,'filled');
+title("Prection Vs Actual Consumption Values")
+xlabel('Predicted Values(MW)')
+ylabel('Actual Values(MW)')
+
+prediction = predict(mdl_dow,mdl_dow_T);
+ 
+XX = abs(prediction-con);
+format long
+err = XX(:,1)/con(:,1);
+C = err(:,31);
+
+CC = sum(C);
+CC;
+ErrorR = (1 - (CC/sum(con)))*100;
+ErrorR
+figure
+scatter(prediction,con,'filled');
+title("Prection Vs Actual Consumption Values")
+xlabel('Predicted Values(MW)')
+ylabel('Actual Values(MW)')
+
+\end{matlabcode}
+
+\begin{par}
+\begin{flushleft}
+Finally, we will create a residual plot for each model to check residuals normality. 
+\end{flushleft}
+\end{par}
+
+\end{document}
